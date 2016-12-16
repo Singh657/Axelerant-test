@@ -1,0 +1,74 @@
+<?php 
+/**
+ * @file
+ * Implements hook_form_formid_alter()
+ *
+ * Adds new text field in Site information form
+ * to store Site API Key
+ */
+function axelerant_custom_form_system_site_information_settings_alter(&$form, &$form_state, $form_id) {
+  $default_value = t('No API Key yet');  
+  $form['site_information']['site_api_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Site API Key'),
+    '#description' => t('A custom field to store site api key'),
+    '#default_value' => variable_get('siteapikey', $default_value),
+   ); 
+   $form['#submit'][] = 'axelerent_custom_system_site_information_settings_submit';
+}
+
+/**
+ * Submit handler for system_site_information_settings
+ */
+function axelerent_custom_system_site_information_settings_submit($form, &$form_state) {
+  if ($form_state['values']['site_api_key'] !== $form['site_information']['site_api_key']['#default_value']) {
+    variable_set('siteapikey', $form_state['values']['site_api_key']);
+    if (!empty( $form_state['values']['site_api_key'])) {
+      drupal_set_message(t("Site API key set to @api_key_value", array('@api_key_value' => $form_state['values']['site_api_key'])));
+    }
+  }
+}
+
+/**
+ * Implements hook_meu()
+ *
+ * Registers path to output JSON value of given node id	
+ */
+ function axelerant_custom_menu() {
+  $items['page_json/%/%'] = array(
+    'title' => 'Node JSON output',
+    'description' => 'JSON value of given node',
+    'page callback' => 'node_json_output',
+    'page arguments' => array(1, 2),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+ }
+ 
+/**
+ * Page callback function for registered path to output JSON
+ */
+ function node_json_output( $apikey = NULL, $node_id = NULL ) {
+   if ($apikey == variable_get('siteapikey') && is_numeric($node_id)) {
+     $valid_page = axelerant_custom_check_node_type( $node_id );
+       drupal_json_output($valid_page);
+     }
+     else {
+       drupal_json_output("Access denied");
+     }
+ }
+  
+ /**
+  * Function to check content type of node id
+  */
+ function axelerant_custom_check_node_type($node_id) {
+   $node = node_load($node_id);
+   $node_type = $node->type;
+   if ($node_type == 'page') {
+     return $node;
+   }
+   else{
+     return 'Access denied';
+   }
+ }

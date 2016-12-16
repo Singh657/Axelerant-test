@@ -1,0 +1,4 @@
+name = Axelerant custom module
+description = A custom module to fulfill the requirements of Axelerant test
+package = Axelerant Test
+core = 7.x
